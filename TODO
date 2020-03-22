@@ -1,0 +1,9 @@
+[] try to match opening and closing tags to check integrity!
+
+have a stack of tags to find parents
+have a maximum stack size to limit
+detect if we go over this stack size
+
+handle CDATA properly
+	should not just be set as content
+

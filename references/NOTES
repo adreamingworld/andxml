@@ -1,0 +1,3 @@
+[?] Seems all attributes are in the format of:
+	Attribute="Value"
+	With the value always in double quotes.
