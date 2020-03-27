@@ -17,6 +17,11 @@ struct XML_Attribute {
 	char* value;
 	};
 
+struct XML_QueryResult {
+	int count;
+	int *indices;
+	};
+
 struct XML_Element {
 	char* name;
 	int parent;
