@@ -1,0 +1,7 @@
+Great reference: https://www.liquid-technologies.com/XML/Element.aspx
+
+[] need to deal with <! better
+	<![ = CDATA? or something else can be in the first set of
+		[]?
+	<!-- --> comments
+	<!doctype or <!DOCTYPE , could be either??

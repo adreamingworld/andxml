@@ -41,5 +41,9 @@ struct XML {
 	};
 
 int xml_load(char* filename, struct XML* xml);
+int xml_ls(struct XML *xml, struct XML_Element *node, struct XML_QueryResult *qr);
+int xml_find_child_by_name(struct XML* xml, struct XML_Element *parent_node, char* string, struct XML_QueryResult *qr);
+void xml_destroy_query_result(struct XML_QueryResult *qr);
+char* xml_get_attribute_by_name(struct XML_Element *node, char* string);
 
 #endif /* XML_H */

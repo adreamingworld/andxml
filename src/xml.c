@@ -172,10 +172,10 @@ xml_get_cdata(FILE* fp, char** cdata)
 		};
 	fseek(fp, -length, SEEK_CUR);
 	*cdata = calloc(1, length+1);
-	fread(*cdata, 1, length, fp);
-//	printf("CDATA @%s@\n", *cdata);
-//	(*cdata)[strlen(*cdata)-1] = 0;
-	
+	fread(*cdata, 1, length-1, fp);
+
+	c = fgetc(fp);
+	if (c != ']') return XML_ERROR;
 	c = fgetc(fp);
 	if (c != ']') return XML_ERROR;
 	c = fgetc(fp);
@@ -335,7 +335,7 @@ void
 xml_add_node_as_sibling(struct XML *xml, int node, int sibling)
 	{
 	struct XML_Element *sibling_node = &xml->elements[sibling];
-	if (sibling > xml->element_count) {puts("Element overflow!"); exit(-1);}
+	if (sibling > xml->element_count) {printf("Element overflow! %i\n", sibling); exit(-1);}
 	/* If has sibling then add as its sibling's sibling */
 	if (sibling_node->sibling == -1) {
 		sibling_node->sibling = node;
@@ -347,7 +347,7 @@ void
 xml_add_node_as_child(struct XML *xml, int node, int parent)
 	{
 	struct XML_Element *parent_node = &xml->elements[parent];
-	if (parent > xml->element_count) {puts("Element overflow!"); exit(-1);}
+	if (parent > xml->element_count) {printf("Element overflow! %i\n", parent); exit(-1);}
 	/* If has child then add as sibling */
 	if (parent_node->child == -1) {
 		parent_node->child = node;
@@ -368,26 +368,49 @@ xml_print_tree(struct XML *xml, int node_index, int level)
 
 	}
 
-/*
-	e.g. cd item
-	to first item
-	cd item 3
-	to thrid child element named `item`
-*/
 int
-xml_cd(struct XML* xml, int node_index, char* string, struct XML_QueryResult *qr)
+xml_ls(struct XML *xml, struct XML_Element *node, struct XML_QueryResult *qr)
 	{
 	int i=0;
-	struct XML_Element *parent_node = &xml->elements[node_index];
+	int child_index = node->child;
+
+	qr->count = 0;
+
+	while (child_index > -1) {
+		node = &xml->elements[child_index];
+		printf("%s\n", node->name);
+		child_index = node->sibling;
+		}
+	return 0;
+	}
+
+int
+xml_find_child_by_name(struct XML* xml, struct XML_Element *parent_node, char* string, struct XML_QueryResult *qr)
+	{
+	int i=0;
 	int child_index = parent_node->child;
 	int current_index = child_index;
 	qr->count = 0;
+
+	/* Is it .. to parent */
+	if (!strcmp("..", string)) { 
+		if (parent_node->parent > -1) {
+			qr->count = 1;
+			qr->indices = malloc(sizeof(int));
+			qr->indices[0] = parent_node->parent;
+			printf("Back to parent %i\n", parent_node->parent);
+			return 0;
+			} else puts("No parent");
+		}
+
 	while (current_index > -1) {
 		struct XML_Element *node = &xml->elements[current_index];
 		//printf("found: %s\n", node->name);
 		if (!strcmp(node->name, string)) qr->count++;
 		current_index = node->sibling;
 		}
+
+	if (qr->count == 0) return 0;
 
 	qr->indices = malloc(sizeof(int) * qr->count);
 	current_index = child_index;
@@ -398,6 +421,26 @@ xml_cd(struct XML* xml, int node_index, char* string, struct XML_QueryResult *qr
 		current_index = node->sibling;
 		}
 
+	return 0;
+	}
+
+void
+xml_destroy_query_result(struct XML_QueryResult *qr)
+	{
+	if (qr->count) {
+		qr->count = 0;
+		free(qr->indices);
+		}
+	}
+
+char*
+xml_get_attribute_by_name(struct XML_Element *node, char* string)
+	{
+	int i;
+	for (i=0; i<node->attribute_count;i++) 
+		if (!strcmp(string, node->attributes[i].name))
+			return node->attributes[i].value;
+	/* Failed to find atribute of that name */
 	return 0;
 	}
 
@@ -415,7 +458,10 @@ xml_load(char* file_name, struct XML* xml)
 	printf("Opening %s\n", file_name);
 	fp = fopen(file_name, "r");
 
-	if (!fp) return XML_ERROR;
+	if (!fp) {
+		puts("Failed to load the file");
+		return XML_ERROR;
+		}
 
 	xml_init(xml);
 	xml_init_element(&xml->root, 0);
@@ -423,10 +469,13 @@ xml_load(char* file_name, struct XML* xml)
 	/* Get xml declaration
 	<?xml version="1.0" encoding="utf-8"?>
 	*/
-	if (xml_get_element(fp, &current_element, &self_ending) != XML_ERROR_OK) return XML_ERROR;
+	if (xml_get_element(fp, &current_element, &self_ending) != XML_ERROR_OK) {
+		puts("Failed to get root element");
+		return XML_ERROR;
+		}
 	xml_print_element(&current_element);
 	if (self_ending) puts("SELF ENDING");
-
+	puts("Getting elements");
 
 	/* Get tags */
 	int level = 0;
@@ -437,6 +486,8 @@ xml_load(char* file_name, struct XML* xml)
 		/* Get content */
 		xml_skip_whitespace(fp);
 		if (xml_get_content(fp, &content) != XML_ERROR_OK) {
+			/* Has content not already been set, i.e. by CDATA*/
+			if (current_element.content == 0) current_element.content = 0;
 			}
 		else {
 			//printf("Content: %s\n", content);
@@ -485,31 +536,6 @@ xml_load(char* file_name, struct XML* xml)
 		}
 	printf("Level: %i\n", level);
 
-	//xml_print_tree(xml, 0, 0);
-	struct XML_QueryResult qr;
-	xml_cd(xml, 1, "item", &qr);
-	printf("%i items found\n", qr.count);
-
-	for (i=0; i<1; i++) {
-		struct XML_QueryResult item_qr;
-
-		xml_cd(xml, qr.indices[i], "enclosure", &item_qr);
-		if (item_qr.count) {
-			char command[1024];
-			printf("Title: %s\n", xml->elements[item_qr.indices[0]].attributes[2].value);
-			strcpy(command, "mpv ");
-			strcat(command, xml->elements[item_qr.indices[0]].attributes[2].value);
-			//system(command);
-			//execvp("ls", &xml->elements[item_qr.indices[0]].attributes[2].value);
-			char *url = xml->elements[item_qr.indices[0]].attributes[2].value; 
-			char *args[] = {"mpv", url, NULL};
-			pid_t pid = 0;
-			pid = fork();
-			if (pid==0) {
-				execvp(args[0], args);
-				}
-			}
-		}
 puts("END");
 	return 0;
 	}

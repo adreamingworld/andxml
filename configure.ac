@@ -6,6 +6,7 @@ AC_CONFIG_AUX_DIR(build-aux)
 AM_INIT_AUTOMAKE([foreign])
 
 AC_PROG_CC
+AC_PROG_RANLIB
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
 
