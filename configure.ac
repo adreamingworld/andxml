@@ -19,6 +19,7 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([andxml.pc])
 
 AC_OUTPUT
 

@@ -5,6 +5,7 @@ ACLOCAL_AMFLAGS = -I m4 --install
 EXTRA_DIST = 	README.md 
 
 lib_LIBRARIES = libandxml.a
+include_HEADERS = src/xml.h
 libandxml_a_SOURCES = \
 	src/xml.h \
 	src/xml.c 
