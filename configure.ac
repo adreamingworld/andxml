@@ -1,4 +1,4 @@
-AC_INIT([xml], [0.0.1], [andy_ball7@hotmail.com], [], [adreamingworld.com])
+AC_INIT([andxml], [0.0.1], [andy_ball7@hotmail.com], [], [adreamingworld.com])
 #AC_CANONICAL_HOST
 #AC_CANONICAL_TARGET
 

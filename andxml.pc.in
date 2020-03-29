@@ -4,6 +4,16 @@ libdir=@libdir@
 includedir=@includedir@
 
 #[...]
-
+Name: andxml
 Cflags: -I${includedir}
 Libs: -L${libdir} -landxml
+
+Name: andxml
+Description: Simple xml library
+Version: 0.0.1
+Requires:
+Conflicts:
+Libs: -L@libdir@  -landxml
+Libs.private: -landxml
+Cflags: -I@includedir@
+
