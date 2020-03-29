@@ -9,13 +9,12 @@ libandxml_a_SOURCES = \
 	src/xml.h \
 	src/xml.c 
 
-# Make one binary called <hello>
-bin_PROGRAMS = xml_test
-
+if BUILD_TEST
 # Sources used to create the <hello> binary
+bin_PROGRAMS = xml_test
 xml_test_SOURCES = \
 	src/main.c
 
 xml_test_CFLAGS = -DDATA_PATH='"$(pkgdatadir)"'
-xml_test_LDADD = -L . -landxml
-
+xml_test_LDADD = libandxml.a
+endif
