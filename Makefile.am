@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -I m4 --install
 # Files we want to be packaged in the tar ball distribution
 EXTRA_DIST = 	README.md 
 
+pkgconfig_DATA = andxml.pc
 lib_LIBRARIES = libandxml.a
 include_HEADERS = src/xml.h
 libandxml_a_SOURCES = \
